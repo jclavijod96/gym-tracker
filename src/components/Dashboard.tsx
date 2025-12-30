@@ -299,16 +299,16 @@ function HomeTab({ profile, cycleInfo, workouts, thisWeekWorkouts, totalVolume, 
         ) : (
           <div className="space-y-2">
             {workouts.slice(0, 3).map((workout, index) => (
-              <Card key={workout.id} className="p-4" hover>
+              <Card key={workout.id} className="p-4 cursor-pointer" hover onClick={onViewProgress}>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center">
-                    <Dumbbell className="w-6 h-6 text-gray-600" />
+                  <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                    <Dumbbell className="w-6 h-6 text-gray-600 dark:text-gray-400" />
                   </div>
                   <div className="flex-1">
-                    <div className="font-medium text-gray-900">
+                    <div className="font-medium text-gray-900 dark:text-gray-100">
                       {workout.exercises?.length || 0} ejercicios
                     </div>
-                    <div className="text-sm text-gray-500 flex items-center gap-2">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
                       <span>{formatDate(workout.date)}</span>
                       {workout.durationMinutes && (
                         <>

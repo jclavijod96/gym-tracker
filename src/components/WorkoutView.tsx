@@ -30,6 +30,7 @@ interface ActiveExercise {
   muscleGroup: string;
   sets: ActiveSet[];
   expanded: boolean;
+  restSeconds: number;
 }
 
 export function WorkoutView({ userId, exercises, routines, onClose }: WorkoutViewProps) {
@@ -87,6 +88,7 @@ export function WorkoutView({ userId, exercises, routines, onClose }: WorkoutVie
         { id: id(), weight: '', reps: '', setType: 'working', completed: false },
       ],
       expanded: true,
+      restSeconds: 90, // Default rest time
     };
     setActiveExercises((prev) => [...prev, newExercise]);
     setShowExercisePicker(false);
@@ -101,6 +103,12 @@ export function WorkoutView({ userId, exercises, routines, onClose }: WorkoutVie
   const toggleExerciseExpanded = (exerciseId: string) => {
     setActiveExercises((prev) =>
       prev.map((e) => (e.id === exerciseId ? { ...e, expanded: !e.expanded } : e))
+    );
+  };
+
+  const updateExerciseRestTime = (exerciseId: string, restSeconds: number) => {
+    setActiveExercises((prev) =>
+      prev.map((e) => (e.id === exerciseId ? { ...e, restSeconds } : e))
     );
   };
 
@@ -155,7 +163,21 @@ export function WorkoutView({ userId, exercises, routines, onClose }: WorkoutVie
 
   const completeSet = (exerciseId: string, setId: string) => {
     updateSet(exerciseId, setId, 'completed', true);
-    startRestTimer();
+    const exercise = activeExercises.find((e) => e.id === exerciseId);
+    if (exercise) {
+      setRestTimer(exercise.restSeconds);
+      setIsTimerRunning(true);
+    }
+  };
+
+  const cancelWorkout = () => {
+    if (confirm('¿Estás seguro de que quieres cancelar este entrenamiento? No se guardará ningún progreso.')) {
+      setIsWorkoutActive(false);
+      setActiveExercises([]);
+      setWorkoutStartTime(null);
+      setRestTimer(0);
+      setIsTimerRunning(false);
+    }
   };
 
   const createQuickRoutine = async () => {
@@ -203,8 +225,14 @@ export function WorkoutView({ userId, exercises, routines, onClose }: WorkoutVie
       setIsWorkoutActive(false);
       setActiveExercises([]);
       setWorkoutStartTime(null);
+      setRestTimer(0);
+      setIsTimerRunning(false);
       return;
     }
+
+    // Stop any active timer before finishing
+    setRestTimer(0);
+    setIsTimerRunning(false);
 
     const endTime = new Date();
     const durationMinutes = Math.round((endTime.getTime() - workoutStartTime.getTime()) / 60000);
@@ -341,17 +369,25 @@ export function WorkoutView({ userId, exercises, routines, onClose }: WorkoutVie
   return (
     <div className="p-4 pb-24">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">Entrenamiento activo</h1>
-          <p className="text-sm text-gray-500">
-            {workoutStartTime && `Iniciado ${workoutStartTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`}
-          </p>
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Entrenamiento activo</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {workoutStartTime && `Iniciado ${workoutStartTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`}
+            </p>
+          </div>
         </div>
-        <Button variant="secondary" size="sm" onClick={finishWorkout}>
-          <Check className="w-4 h-4 mr-1" />
-          Finalizar
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="ghost" size="sm" onClick={cancelWorkout} className="flex-1 border border-gray-300 dark:border-gray-600">
+            <X className="w-4 h-4 mr-1" />
+            Cancelar
+          </Button>
+          <Button variant="secondary" size="sm" onClick={finishWorkout} className="flex-1">
+            <Check className="w-4 h-4 mr-1" />
+            Finalizar
+          </Button>
+        </div>
       </div>
 
       {/* Rest Timer */}
@@ -445,8 +481,33 @@ export function WorkoutView({ userId, exercises, routines, onClose }: WorkoutVie
                 {/* Sets */}
                 {exercise.expanded && (
                   <div className="px-4 pb-4">
+                    {/* Rest time selector */}
+                    <div className="mb-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-gray-500" />
+                        <span className="text-sm text-gray-700 dark:text-gray-300">Descanso entre series:</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => updateExerciseRestTime(exercise.id, Math.max(30, exercise.restSeconds - 15))}
+                          className="w-7 h-7 rounded-full bg-white dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
+                        >
+                          -
+                        </button>
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100 w-12 text-center">
+                          {exercise.restSeconds}s
+                        </span>
+                        <button
+                          onClick={() => updateExerciseRestTime(exercise.id, Math.min(300, exercise.restSeconds + 15))}
+                          className="w-7 h-7 rounded-full bg-white dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+
                     {/* Header row */}
-                    <div className="grid grid-cols-12 gap-2 text-xs text-gray-500 mb-2 px-2">
+                    <div className="grid grid-cols-12 gap-2 text-xs text-gray-500 dark:text-gray-400 mb-2 px-2">
                       <div className="col-span-2">Serie</div>
                       <div className="col-span-4">Peso (kg)</div>
                       <div className="col-span-4">Reps</div>
