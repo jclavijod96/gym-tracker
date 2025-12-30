@@ -36,6 +36,8 @@ export function WorkoutView({ userId, exercises, routines, onClose }: WorkoutVie
   const [isWorkoutActive, setIsWorkoutActive] = useState(false);
   const [activeExercises, setActiveExercises] = useState<ActiveExercise[]>([]);
   const [showExercisePicker, setShowExercisePicker] = useState(false);
+  const [showCreateRoutine, setShowCreateRoutine] = useState(false);
+  const [routineName, setRoutineName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string | null>(null);
   const [workoutStartTime, setWorkoutStartTime] = useState<Date | null>(null);
@@ -156,8 +158,53 @@ export function WorkoutView({ userId, exercises, routines, onClose }: WorkoutVie
     startRestTimer();
   };
 
+  const createQuickRoutine = async () => {
+    if (!routineName.trim()) {
+      alert('Por favor ingresa un nombre para la rutina');
+      return;
+    }
+
+    try {
+      const routineId = id();
+      const transactions = [];
+
+      // Create routine
+      transactions.push(
+        db.tx.routines[routineId].update({
+          name: routineName,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        }).link({ owner: userId })
+      );
+
+      await db.transact(transactions);
+      setShowCreateRoutine(false);
+      setRoutineName('');
+      alert('Rutina creada correctamente');
+    } catch (error) {
+      console.error('Error creating routine:', error);
+      alert('Error al crear la rutina');
+    }
+  };
+
   const finishWorkout = async () => {
     if (!workoutStartTime) return;
+
+    // Check if there are any completed sets
+    const hasCompletedSets = activeExercises.some((exercise) =>
+      exercise.sets.some((set) => set.completed && set.weight && set.reps)
+    );
+
+    if (!hasCompletedSets) {
+      if (!confirm('No has completado ningún ejercicio. ¿Quieres salir sin guardar?')) {
+        return;
+      }
+      // Just exit without saving
+      setIsWorkoutActive(false);
+      setActiveExercises([]);
+      setWorkoutStartTime(null);
+      return;
+    }
 
     const endTime = new Date();
     const durationMinutes = Math.round((endTime.getTime() - workoutStartTime.getTime()) / 60000);
@@ -178,9 +225,13 @@ export function WorkoutView({ userId, exercises, routines, onClose }: WorkoutVie
         }).link({ owner: userId })
       );
 
-      // Create workout exercises and sets
+      // Create workout exercises and sets (only for exercises with completed sets)
       for (let i = 0; i < activeExercises.length; i++) {
         const exercise = activeExercises[i];
+        const completedSets = exercise.sets.filter((s) => s.completed && s.weight && s.reps);
+
+        if (completedSets.length === 0) continue; // Skip exercises without completed sets
+
         const workoutExerciseId = id();
 
         transactions.push(
@@ -256,7 +307,7 @@ export function WorkoutView({ userId, exercises, routines, onClose }: WorkoutVie
               icon={<Dumbbell className="w-8 h-8" />}
               title="Sin rutinas"
               description="Crea rutinas para empezar entrenamientos más rápido"
-              action={<Button variant="outline" size="sm">Crear rutina</Button>}
+              action={<Button variant="outline" size="sm" onClick={() => setShowCreateRoutine(true)}>Crear rutina</Button>}
             />
           ) : (
             <div className="space-y-2">
@@ -538,6 +589,42 @@ export function WorkoutView({ userId, exercises, routines, onClose }: WorkoutVie
               </div>
             </button>
           ))}
+        </div>
+      </Modal>
+
+      {/* Create Routine Modal */}
+      <Modal
+        isOpen={showCreateRoutine}
+        onClose={() => { setShowCreateRoutine(false); setRoutineName(''); }}
+        title="Crear rutina rápida"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Crea una rutina básica. Podrás agregar ejercicios más tarde desde el perfil.
+          </p>
+          <Input
+            label="Nombre de la rutina"
+            placeholder="Ej: Push Day, Piernas..."
+            value={routineName}
+            onChange={(e) => setRoutineName(e.target.value)}
+            autoFocus
+          />
+          <div className="flex gap-3 pt-2">
+            <Button
+              variant="ghost"
+              className="flex-1"
+              onClick={() => { setShowCreateRoutine(false); setRoutineName(''); }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={createQuickRoutine}
+              disabled={!routineName.trim()}
+            >
+              Crear
+            </Button>
+          </div>
         </div>
       </Modal>
     </div>

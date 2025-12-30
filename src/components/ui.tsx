@@ -25,8 +25,8 @@ export function Button({
   const variants = {
     primary: 'bg-jaguar-600 text-white hover:bg-jaguar-700 shadow-sm hover:shadow-md',
     secondary: 'bg-burgundy-600 text-white hover:bg-burgundy-700 shadow-sm hover:shadow-md',
-    ghost: 'bg-transparent hover:bg-gray-100 text-gray-700',
-    outline: 'border-2 border-jaguar-600 text-jaguar-600 hover:bg-jaguar-50',
+    ghost: 'bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300',
+    outline: 'border-2 border-jaguar-600 dark:border-jaguar-500 text-jaguar-600 dark:text-jaguar-400 hover:bg-jaguar-50 dark:hover:bg-jaguar-950',
   };
   
   const sizes = {
@@ -77,8 +77,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           <input
             ref={ref}
             className={`
-              w-full px-4 py-2.5 rounded-xl border border-gray-200 
-              bg-white text-gray-900 placeholder-gray-400
+              w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700
+              bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500
               focus:outline-none focus:ring-2 focus:ring-jaguar-500 focus:border-transparent
               transition-all duration-200
               ${icon ? 'pl-10' : ''}

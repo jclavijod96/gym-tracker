@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { db } from '@/lib/db';
 import { motion } from 'framer-motion';
 import { Card, Button, Input, Select, Modal } from './ui';
 import { getCycleInfo, CYCLE_PHASES } from '@/lib/utils';
-import { User, Settings, LogOut, Moon, Bell, ChevronRight, Heart, Scale, Ruler, Target } from 'lucide-react';
+import { User, Settings, LogOut, Moon, Sun, Bell, ChevronRight, Heart, Scale, Ruler, Target } from 'lucide-react';
 
 interface ProfileViewProps {
   user: { id: string; email: string };
@@ -16,6 +16,25 @@ interface ProfileViewProps {
 export function ProfileView({ user, profile, cycleConfig }: ProfileViewProps) {
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showEditCycle, setShowEditCycle] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    // Check initial theme
+    setIsDarkMode(document.documentElement.classList.contains('dark'));
+  }, []);
+
+  const toggleDarkMode = () => {
+    const newDarkMode = !isDarkMode;
+    setIsDarkMode(newDarkMode);
+
+    if (newDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.theme = 'dark';
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.theme = 'light';
+    }
+  };
   
   // Edit form state
   const [name, setName] = useState(profile?.name || '');
@@ -188,12 +207,21 @@ export function ProfileView({ user, profile, cycleConfig }: ProfileViewProps) {
             </div>
             <ChevronRight className="w-5 h-5 text-gray-400" />
           </button>
-          <button className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+          <button
+            onClick={toggleDarkMode}
+            className="w-full p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          >
             <div className="flex items-center gap-3">
-              <Moon className="w-5 h-5 text-gray-400" />
-              <span className="text-gray-900">Tema oscuro</span>
+              {isDarkMode ? (
+                <Sun className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+              ) : (
+                <Moon className="w-5 h-5 text-gray-400" />
+              )}
+              <span className="text-gray-900 dark:text-gray-100">Tema oscuro</span>
             </div>
-            <div className="text-sm text-gray-400">Próximamente</div>
+            <div className={`w-12 h-6 rounded-full transition-colors ${isDarkMode ? 'bg-jaguar-500' : 'bg-gray-200'}`}>
+              <div className={`w-5 h-5 rounded-full bg-white shadow transform transition-transform ${isDarkMode ? 'translate-x-6' : 'translate-x-0.5'} mt-0.5`} />
+            </div>
           </button>
         </Card>
       </motion.div>

@@ -19,7 +19,6 @@ interface DashboardProps {
 
 export function Dashboard({ user }: DashboardProps) {
   const [activeTab, setActiveTab] = useState<Tab>('home');
-  const [showStartWorkout, setShowStartWorkout] = useState(false);
 
   // Query user profile
   const { data: profileData } = db.useQuery({
@@ -75,7 +74,7 @@ export function Dashboard({ user }: DashboardProps) {
   }, 0);
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
       {/* Main Content */}
       {activeTab === 'home' && (
         <HomeTab
@@ -84,7 +83,8 @@ export function Dashboard({ user }: DashboardProps) {
           workouts={workouts}
           thisWeekWorkouts={thisWeekWorkouts}
           totalVolume={totalVolume}
-          onStartWorkout={() => setShowStartWorkout(true)}
+          onStartWorkout={() => setActiveTab('workout')}
+          onViewProgress={() => setActiveTab('progress')}
         />
       )}
 
@@ -114,7 +114,7 @@ export function Dashboard({ user }: DashboardProps) {
       )}
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 safe-bottom">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 safe-bottom">
         <div className="flex justify-around items-center h-16 max-w-lg mx-auto">
           <TabBarItem
             icon={<Home className="w-6 h-6" />}
@@ -153,9 +153,10 @@ interface HomeTabProps {
   thisWeekWorkouts: any[];
   totalVolume: number;
   onStartWorkout: () => void;
+  onViewProgress: () => void;
 }
 
-function HomeTab({ profile, cycleInfo, workouts, thisWeekWorkouts, totalVolume, onStartWorkout }: HomeTabProps) {
+function HomeTab({ profile, cycleInfo, workouts, thisWeekWorkouts, totalVolume, onStartWorkout, onViewProgress }: HomeTabProps) {
   const greeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Buenos días';
@@ -285,8 +286,8 @@ function HomeTab({ profile, cycleInfo, workouts, thisWeekWorkouts, totalVolume, 
         transition={{ delay: 0.4 }}
       >
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-semibold text-gray-900">Entrenamientos recientes</h2>
-          <button className="text-sm text-jaguar-600 font-medium">Ver todos</button>
+          <h2 className="font-semibold text-gray-900 dark:text-gray-100">Entrenamientos recientes</h2>
+          <button onClick={onViewProgress} className="text-sm text-jaguar-600 dark:text-jaguar-400 font-medium hover:underline">Ver todos</button>
         </div>
 
         {workouts.length === 0 ? (
