@@ -10,9 +10,10 @@ interface ProgressViewProps {
   userId: string;
   workouts: any[];
   exercises: any[];
+  onViewWorkout: (workout: any) => void;
 }
 
-export function ProgressView({ userId, workouts, exercises }: ProgressViewProps) {
+export function ProgressView({ userId, workouts, exercises, onViewWorkout }: ProgressViewProps) {
   const stats = useMemo(() => {
     const now = new Date();
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -114,8 +115,8 @@ export function ProgressView({ userId, workouts, exercises }: ProgressViewProps)
   return (
     <div className="p-4 space-y-4 pb-24">
       <div className="pt-2">
-        <h1 className="text-2xl font-bold text-gray-900">Progreso</h1>
-        <p className="text-gray-500">Tus estadísticas de entrenamiento</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Progreso</h1>
+        <p className="text-gray-500 dark:text-gray-400">Tus estadísticas de entrenamiento</p>
       </div>
 
       {/* Main Stats */}
@@ -123,10 +124,10 @@ export function ProgressView({ userId, workouts, exercises }: ProgressViewProps)
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="p-4">
             <div className="flex items-center gap-2 mb-2">
-              <Calendar className="w-5 h-5 text-jaguar-600" />
-              <span className="text-sm text-gray-500">Esta semana</span>
+              <Calendar className="w-5 h-5 text-jaguar-600 dark:text-jaguar-400" />
+              <span className="text-sm text-gray-500 dark:text-gray-400">Esta semana</span>
             </div>
-            <div className="text-3xl font-bold text-gray-900">{stats.thisWeekWorkouts}</div>
+            <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">{stats.thisWeekWorkouts}</div>
             <div className="flex items-center gap-1 mt-1">
               {stats.thisWeekWorkouts >= stats.lastWeekWorkouts ? (
                 <TrendingUp className="w-4 h-4 text-jaguar-600" />
@@ -143,21 +144,21 @@ export function ProgressView({ userId, workouts, exercises }: ProgressViewProps)
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
           <Card className="p-4">
             <div className="flex items-center gap-2 mb-2">
-              <Flame className="w-5 h-5 text-burgundy-600" />
-              <span className="text-sm text-gray-500">Racha</span>
+              <Flame className="w-5 h-5 text-burgundy-600 dark:text-burgundy-400" />
+              <span className="text-sm text-gray-500 dark:text-gray-400">Racha</span>
             </div>
-            <div className="text-3xl font-bold text-gray-900">{stats.streak}</div>
-            <div className="text-sm text-gray-500 mt-1">días consecutivos</div>
+            <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">{stats.streak}</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">días consecutivos</div>
           </Card>
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
           <Card className="p-4">
             <div className="flex items-center gap-2 mb-2">
-              <Target className="w-5 h-5 text-amber-600" />
-              <span className="text-sm text-gray-500">Volumen semanal</span>
+              <Target className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              <span className="text-sm text-gray-500 dark:text-gray-400">Volumen semanal</span>
             </div>
-            <div className="text-3xl font-bold text-gray-900">
+            <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">
               {stats.thisWeekVolume > 1000 ? `${(stats.thisWeekVolume / 1000).toFixed(1)}k` : stats.thisWeekVolume}
             </div>
             <div className="flex items-center gap-1 mt-1">
@@ -176,11 +177,11 @@ export function ProgressView({ userId, workouts, exercises }: ProgressViewProps)
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
           <Card className="p-4">
             <div className="flex items-center gap-2 mb-2">
-              <Trophy className="w-5 h-5 text-purple-600" />
-              <span className="text-sm text-gray-500">Total</span>
+              <Trophy className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              <span className="text-sm text-gray-500 dark:text-gray-400">Total</span>
             </div>
-            <div className="text-3xl font-bold text-gray-900">{stats.totalWorkouts}</div>
-            <div className="text-sm text-gray-500 mt-1">entrenamientos</div>
+            <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">{stats.totalWorkouts}</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">entrenamientos</div>
           </Card>
         </motion.div>
       </div>
@@ -189,7 +190,7 @@ export function ProgressView({ userId, workouts, exercises }: ProgressViewProps)
       {Object.keys(stats.muscleGroupVolume).length > 0 && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
           <Card className="p-4">
-            <h3 className="font-semibold text-gray-900 mb-4">Volumen por grupo muscular</h3>
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Volumen por grupo muscular</h3>
             <div className="space-y-3">
               {Object.entries(stats.muscleGroupVolume)
                 .sort((a, b) => b[1] - a[1])
@@ -227,7 +228,7 @@ export function ProgressView({ userId, workouts, exercises }: ProgressViewProps)
       {stats.topExercises.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
           <Card className="p-4">
-            <h3 className="font-semibold text-gray-900 mb-4">Top ejercicios (este mes)</h3>
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Top ejercicios (este mes)</h3>
             <div className="space-y-3">
               {stats.topExercises.map((ex, i) => (
                 <div key={i} className="flex items-center gap-3">
@@ -256,6 +257,50 @@ export function ProgressView({ userId, workouts, exercises }: ProgressViewProps)
           </Card>
         </motion.div>
       )}
+
+      {/* Workout History */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+        <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Historial de entrenamientos</h3>
+        <div className="space-y-2">
+          {workouts.map((workout, index) => {
+            const totalVolume = workout.exercises?.reduce((acc: number, we: any) => {
+              const sets = we.sets || [];
+              return acc + calculateVolume(sets.map((s: any) => ({ weight: s.weight || 0, reps: s.reps || 0 })));
+            }, 0) || 0;
+
+            return (
+              <motion.div
+                key={workout.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35 + index * 0.05 }}
+              >
+                <Card className="p-4 cursor-pointer" hover onClick={() => onViewWorkout(workout)}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                      <Dumbbell className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900 dark:text-gray-100">
+                        {workout.exercises?.length || 0} ejercicios
+                      </div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">{formatDate(workout.date)}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                        {totalVolume > 1000 ? `${(totalVolume / 1000).toFixed(1)}k` : totalVolume} kg
+                      </div>
+                      {workout.durationMinutes && (
+                        <div className="text-xs text-gray-500 dark:text-gray-400">{workout.durationMinutes}m</div>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </div>
+      </motion.div>
     </div>
   );
 }

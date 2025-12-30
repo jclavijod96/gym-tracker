@@ -160,11 +160,11 @@ export function RoutinesView({ userId, routines, exercises }: RoutinesViewProps)
   });
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-4 pb-24">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Rutinas</h1>
-          <p className="text-gray-500">Crea plantillas para tus entrenamientos</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Rutinas</h1>
+          <p className="text-gray-500 dark:text-gray-400">Crea plantillas para tus entrenamientos</p>
         </div>
         <Button onClick={openCreateModal}>
           <Plus className="w-5 h-5 mr-1" />
@@ -189,15 +189,15 @@ export function RoutinesView({ userId, routines, exercises }: RoutinesViewProps)
           {routines.map((routine) => (
             <Card key={routine.id} className="p-4">
               <div className="flex items-start gap-3">
-                <div className="w-12 h-12 rounded-xl bg-burgundy-100 flex items-center justify-center shrink-0">
-                  <Dumbbell className="w-6 h-6 text-burgundy-600" />
+                <div className="w-12 h-12 rounded-xl bg-burgundy-100 dark:bg-burgundy-900 flex items-center justify-center shrink-0">
+                  <Dumbbell className="w-6 h-6 text-burgundy-600 dark:text-burgundy-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-gray-900">{routine.name}</div>
+                  <div className="font-semibold text-gray-900 dark:text-gray-100">{routine.name}</div>
                   {routine.description && (
-                    <p className="text-sm text-gray-500 truncate">{routine.description}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{routine.description}</p>
                   )}
-                  <div className="text-sm text-gray-400 mt-1">
+                  <div className="text-sm text-gray-400 dark:text-gray-500 mt-1">
                     {routine.exercises?.length || 0} ejercicios
                   </div>
                 </div>

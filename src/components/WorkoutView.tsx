@@ -13,6 +13,7 @@ interface WorkoutViewProps {
   exercises: any[];
   routines: any[];
   onClose: () => void;
+  onManageRoutines?: () => void;
 }
 
 interface ActiveSet {
@@ -33,7 +34,7 @@ interface ActiveExercise {
   restSeconds: number;
 }
 
-export function WorkoutView({ userId, exercises, routines, onClose }: WorkoutViewProps) {
+export function WorkoutView({ userId, exercises, routines, onClose, onManageRoutines }: WorkoutViewProps) {
   const [isWorkoutActive, setIsWorkoutActive] = useState(false);
   const [activeExercises, setActiveExercises] = useState<ActiveExercise[]>([]);
   const [showExercisePicker, setShowExercisePicker] = useState(false);
@@ -329,25 +330,29 @@ export function WorkoutView({ userId, exercises, routines, onClose }: WorkoutVie
 
         {/* Routines */}
         <div>
-          <h2 className="font-semibold text-gray-900 mb-3">Mis rutinas</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-semibold text-gray-900 dark:text-gray-100">Mis rutinas</h2>
+            <Button variant="outline" size="sm" onClick={onManageRoutines}>
+              Gestionar rutinas
+            </Button>
+          </div>
           {routines.length === 0 ? (
             <EmptyState
               icon={<Dumbbell className="w-8 h-8" />}
               title="Sin rutinas"
-              description="Crea rutinas para empezar entrenamientos más rápido"
-              action={<Button variant="outline" size="sm" onClick={() => setShowCreateRoutine(true)}>Crear rutina</Button>}
+              description="Las rutinas te permiten guardar ejercicios con series, repeticiones y pesos predefinidos."
             />
           ) : (
             <div className="space-y-2">
               {routines.map((routine) => (
                 <Card key={routine.id} className="p-4" hover>
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-burgundy-100 flex items-center justify-center">
-                      <Dumbbell className="w-6 h-6 text-burgundy-600" />
+                    <div className="w-12 h-12 rounded-xl bg-burgundy-100 dark:bg-burgundy-900 flex items-center justify-center">
+                      <Dumbbell className="w-6 h-6 text-burgundy-600 dark:text-burgundy-400" />
                     </div>
                     <div className="flex-1">
-                      <div className="font-medium text-gray-900">{routine.name}</div>
-                      <div className="text-sm text-gray-500">
+                      <div className="font-medium text-gray-900 dark:text-gray-100">{routine.name}</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
                         {routine.exercises?.length || 0} ejercicios
                       </div>
                     </div>

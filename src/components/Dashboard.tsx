@@ -3,15 +3,15 @@
 import { useState } from 'react';
 import { db } from '@/lib/db';
 import { motion } from 'framer-motion';
-import { Card, Badge, Button, EmptyState, TabBarItem } from './ui';
-import { getCycleInfo, CYCLE_PHASES, formatDate, calculate1RM, calculateVolume } from '@/lib/utils';
+import { Card, Badge, Button, EmptyState, TabBarItem, Modal } from './ui';
+import { getCycleInfo, CYCLE_PHASES, formatDate, calculate1RM, calculateVolume, MUSCLE_GROUPS } from '@/lib/utils';
 import { WorkoutView } from './WorkoutView';
 import { RoutinesView } from './RoutinesView';
 import { ProgressView } from './ProgressView';
 import { ProfileView } from './ProfileView';
-import { Home, Dumbbell, TrendingUp, User, Plus, Calendar, Trophy, Flame, Clock } from 'lucide-react';
+import { Home, Dumbbell, TrendingUp, User, Plus, Calendar, Trophy, Flame, Clock, List } from 'lucide-react';
 
-type Tab = 'home' | 'workout' | 'progress' | 'profile';
+type Tab = 'home' | 'workout' | 'routines' | 'progress' | 'profile';
 
 interface DashboardProps {
   user: { id: string; email: string };
@@ -19,6 +19,7 @@ interface DashboardProps {
 
 export function Dashboard({ user }: DashboardProps) {
   const [activeTab, setActiveTab] = useState<Tab>('home');
+  const [selectedWorkout, setSelectedWorkout] = useState<any | null>(null);
 
   // Query user profile
   const { data: profileData } = db.useQuery({
@@ -85,6 +86,7 @@ export function Dashboard({ user }: DashboardProps) {
           totalVolume={totalVolume}
           onStartWorkout={() => setActiveTab('workout')}
           onViewProgress={() => setActiveTab('progress')}
+          onViewWorkout={(workout) => setSelectedWorkout(workout)}
         />
       )}
 
@@ -94,6 +96,15 @@ export function Dashboard({ user }: DashboardProps) {
           exercises={exercises}
           routines={routines}
           onClose={() => setActiveTab('home')}
+          onManageRoutines={() => setActiveTab('routines')}
+        />
+      )}
+
+      {activeTab === 'routines' && (
+        <RoutinesView
+          userId={user.id}
+          routines={routines}
+          exercises={exercises}
         />
       )}
 
@@ -102,6 +113,7 @@ export function Dashboard({ user }: DashboardProps) {
           userId={user.id}
           workouts={workouts}
           exercises={exercises}
+          onViewWorkout={(workout) => setSelectedWorkout(workout)}
         />
       )}
 
@@ -110,6 +122,14 @@ export function Dashboard({ user }: DashboardProps) {
           user={user}
           profile={profile}
           cycleConfig={cycleConfig}
+        />
+      )}
+
+      {/* Workout Detail Modal */}
+      {selectedWorkout && (
+        <WorkoutDetailModal
+          workout={selectedWorkout}
+          onClose={() => setSelectedWorkout(null)}
         />
       )}
 
@@ -127,6 +147,12 @@ export function Dashboard({ user }: DashboardProps) {
             label="Entrenar"
             active={activeTab === 'workout'}
             onClick={() => setActiveTab('workout')}
+          />
+          <TabBarItem
+            icon={<List className="w-6 h-6" />}
+            label="Rutinas"
+            active={activeTab === 'routines'}
+            onClick={() => setActiveTab('routines')}
           />
           <TabBarItem
             icon={<TrendingUp className="w-6 h-6" />}
@@ -154,9 +180,10 @@ interface HomeTabProps {
   totalVolume: number;
   onStartWorkout: () => void;
   onViewProgress: () => void;
+  onViewWorkout: (workout: any) => void;
 }
 
-function HomeTab({ profile, cycleInfo, workouts, thisWeekWorkouts, totalVolume, onStartWorkout, onViewProgress }: HomeTabProps) {
+function HomeTab({ profile, cycleInfo, workouts, thisWeekWorkouts, totalVolume, onStartWorkout, onViewProgress, onViewWorkout }: HomeTabProps) {
   const greeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Buenos días';
@@ -299,7 +326,7 @@ function HomeTab({ profile, cycleInfo, workouts, thisWeekWorkouts, totalVolume, 
         ) : (
           <div className="space-y-2">
             {workouts.slice(0, 3).map((workout, index) => (
-              <Card key={workout.id} className="p-4 cursor-pointer" hover onClick={onViewProgress}>
+              <Card key={workout.id} className="p-4 cursor-pointer" hover onClick={() => onViewWorkout(workout)}>
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                     <Dumbbell className="w-6 h-6 text-gray-600 dark:text-gray-400" />
@@ -331,5 +358,122 @@ function HomeTab({ profile, cycleInfo, workouts, thisWeekWorkouts, totalVolume, 
         )}
       </motion.div>
     </div>
+  );
+}
+
+interface WorkoutDetailModalProps {
+  workout: any;
+  onClose: () => void;
+}
+
+function WorkoutDetailModal({ workout, onClose }: WorkoutDetailModalProps) {
+  // Calculate total volume
+  const totalVolume = workout.exercises?.reduce((acc: number, we: any) => {
+    const sets = we.sets || [];
+    return acc + calculateVolume(sets.map((s: any) => ({ weight: s.weight || 0, reps: s.reps || 0 })));
+  }, 0) || 0;
+
+  const totalSets = workout.exercises?.reduce((acc: number, we: any) => acc + (we.sets?.length || 0), 0) || 0;
+
+  return (
+    <Modal isOpen={true} onClose={onClose} title="Detalle del entrenamiento">
+      <div className="space-y-4">
+        {/* Workout Summary */}
+        <div className="grid grid-cols-3 gap-3">
+          <div className="text-center p-3 rounded-xl bg-gray-50 dark:bg-gray-800">
+            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{workout.exercises?.length || 0}</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">Ejercicios</div>
+          </div>
+          <div className="text-center p-3 rounded-xl bg-gray-50 dark:bg-gray-800">
+            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{totalSets}</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">Series</div>
+          </div>
+          <div className="text-center p-3 rounded-xl bg-gray-50 dark:bg-gray-800">
+            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              {totalVolume > 1000 ? `${(totalVolume / 1000).toFixed(1)}k` : totalVolume}
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">kg total</div>
+          </div>
+        </div>
+
+        {/* Date and Duration */}
+        <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-800">
+          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+            <Calendar className="w-4 h-4" />
+            <span>{formatDate(workout.date)}</span>
+          </div>
+          {workout.durationMinutes && (
+            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+              <Clock className="w-4 h-4" />
+              <span>{workout.durationMinutes} minutos</span>
+            </div>
+          )}
+        </div>
+
+        {/* Exercises */}
+        <div className="space-y-3 max-h-96 overflow-y-auto">
+          {workout.exercises?.map((we: any, index: number) => {
+            const exercise = we.exercise?.[0];
+            if (!exercise) return null;
+
+            const exerciseVolume = calculateVolume((we.sets || []).map((s: any) => ({ weight: s.weight || 0, reps: s.reps || 0 })));
+            const maxWeight = Math.max(...(we.sets || []).map((s: any) => s.weight || 0));
+
+            return (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                <Card className="p-4">
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+                      <span className="text-lg">
+                        {MUSCLE_GROUPS.find((m) => m.value === exercise.muscleGroup)?.emoji || '💪'}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-gray-900 dark:text-gray-100">{exercise.name}</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                        <span>{we.sets?.length || 0} series</span>
+                        <span>•</span>
+                        <span>{exerciseVolume} kg</span>
+                        {maxWeight > 0 && (
+                          <>
+                            <span>•</span>
+                            <span>Max: {maxWeight} kg</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sets table */}
+                  <div className="space-y-1">
+                    <div className="grid grid-cols-3 gap-2 text-xs text-gray-500 dark:text-gray-400 px-2 pb-1">
+                      <div>Serie</div>
+                      <div className="text-center">Peso (kg)</div>
+                      <div className="text-center">Reps</div>
+                    </div>
+                    {we.sets?.map((set: any, setIndex: number) => (
+                      <div key={setIndex} className="grid grid-cols-3 gap-2 text-sm px-2 py-1 rounded bg-gray-50 dark:bg-gray-800">
+                        <div className="text-gray-700 dark:text-gray-300">{setIndex + 1}</div>
+                        <div className="text-center font-mono text-gray-900 dark:text-gray-100">{set.weight}</div>
+                        <div className="text-center font-mono text-gray-900 dark:text-gray-100">{set.reps}</div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        <Button variant="ghost" className="w-full" onClick={onClose}>
+          Cerrar
+        </Button>
+      </div>
+    </Modal>
   );
 }
